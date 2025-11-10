@@ -13,8 +13,3 @@ body {
   100% { background-position: 0% 50%; }
 }
 
-@keyframes glow {
-  0% { box-shadow: 0 0 5px #ff0000, 0 0 10px #ff4444; }
-  50% { box-shadow: 0 0 15px #ff0000, 0 0 30px #ff8888; }
-  100% { box-shadow: 0 0 5px #ff0000, 0 0 10px #ff4444; }
-}
