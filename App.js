@@ -1,6 +1,6 @@
-import { useRef, useState } from "react";
-import TodoList from "./TodoList";
+import { useRef, useState, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
+import TodoList from "./TodoList";
 import AnimatedCounter from "./AnimatedCounter";
 import CyberBackground from "./CyberBackground";
 
@@ -11,7 +11,7 @@ function App() {
 
   // Todo削除
   const deleteTodo = (id) => {
-    setTodos((prevTodos) => prevTodos.filter((todo) => todo.id !== id));
+    setTodos((prev) => prev.filter((todo) => todo.id !== id));
   };
 
   // Todo追加
@@ -24,17 +24,16 @@ function App() {
 
   // Todo完了切替
   const toggleTodo = (id) => {
-    const newTodos = [...todos];
-    const todo = newTodos.find((t) => t.id === id);
-    if (todo) {
-      todo.completed = !todo.completed;
-      setTodos(newTodos);
-    }
+    setTodos((prev) =>
+      prev.map((todo) =>
+        todo.id === id ? { ...todo, completed: !todo.completed } : todo
+      )
+    );
   };
 
   // 完了済みTodo削除
   const handleClear = () => {
-    setTodos(todos.filter((t) => !t.completed));
+    setTodos((prev) => prev.filter((todo) => !todo.completed));
   };
 
   // 遅刻記録追加
@@ -55,8 +54,8 @@ function App() {
     const year = now.getFullYear();
     const month = now.getMonth();
     return lateCounts.filter((late) => {
-      const lateDate = new Date(late.date);
-      return lateDate.getFullYear() === year && lateDate.getMonth() === month;
+      const d = new Date(late.date);
+      return d.getFullYear() === year && d.getMonth() === month;
     }).length;
   };
 
@@ -80,7 +79,7 @@ function App() {
             Add Task
           </button>
           <button onClick={handleClear} style={styles.button}>
-            Delete
+            Delete Completed
           </button>
         </div>
 
@@ -138,9 +137,8 @@ const styles = {
   app: {
     position: "relative",
     minHeight: "100vh",
-    backgroundColor: "#0f0f0f",
-    color: "#00ffea",
     fontFamily: "'Orbitron', sans-serif",
+    color: "#00ffea",
   },
   container: {
     position: "relative",
