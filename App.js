@@ -2,16 +2,19 @@ import { useRef, useState } from "react";
 import TodoList from "./TodoList";
 import { v4 as uuidv4 } from "uuid";
 import AnimatedCounter from "./AnimatedCounter";
-import CyberBackground from "./CyberBackground"; // 背景用コンポーネント
+import CyberBackground from "./CyberBackground";
 
 function App() {
   const [todos, setTodos] = useState([]);
+  const [lateCounts, setLateCounts] = useState([]);
   const todoNameRef = useRef();
 
+  // Todo削除
   const deleteTodo = (id) => {
     setTodos((prevTodos) => prevTodos.filter((todo) => todo.id !== id));
   };
 
+  // Todo追加
   const handleAddTodo = () => {
     const name = todoNameRef.current.value.trim();
     if (!name) return;
@@ -19,6 +22,7 @@ function App() {
     todoNameRef.current.value = "";
   };
 
+  // Todo完了切替
   const toggleTodo = (id) => {
     const newTodos = [...todos];
     const todo = newTodos.find((t) => t.id === id);
@@ -28,8 +32,32 @@ function App() {
     }
   };
 
+  // 完了済みTodo削除
   const handleClear = () => {
     setTodos(todos.filter((t) => !t.completed));
+  };
+
+  // 遅刻記録追加
+  const recordLate = () => {
+    const today = new Date();
+    const dateStr = today.toISOString().split("T")[0]; // YYYY-MM-DD
+    setLateCounts((prev) => [...prev, { id: uuidv4(), date: dateStr }]);
+  };
+
+  // 遅刻履歴削除
+  const deleteLate = (id) => {
+    setLateCounts((prev) => prev.filter((late) => late.id !== id));
+  };
+
+  // 当月の遅刻回数
+  const getCurrentMonthLateCount = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    return lateCounts.filter((late) => {
+      const lateDate = new Date(late.date);
+      return lateDate.getFullYear() === year && lateDate.getMonth() === month;
+    }).length;
   };
 
   return (
@@ -52,16 +80,55 @@ function App() {
             Add Task
           </button>
           <button onClick={handleClear} style={styles.button}>
-            Delete 
+            Delete
           </button>
         </div>
 
+        {/* タスクカウント */}
         <div style={styles.counter}>
-  残りのタスク：
-  <AnimatedCounter value={todos.filter((t) => !t.completed).length} /> ／ 
-  合計：
-  <AnimatedCounter value={todos.length} />
-</div>
+          残りのタスク：
+          <AnimatedCounter value={todos.filter((t) => !t.completed).length} /> ／
+          合計：
+          <AnimatedCounter value={todos.length} />
+        </div>
+
+        {/* 遅刻カウント */}
+        <div style={styles.lateCounter}>
+          今月の遅刻回数：
+          <AnimatedCounter value={getCurrentMonthLateCount()} />
+        </div>
+
+        {/* 遅刻記録ボタン */}
+        <div style={{ textAlign: "center", marginTop: "10px" }}>
+          <button onClick={recordLate} style={styles.button}>
+            遅刻記録
+          </button>
+        </div>
+
+        {/* 遅刻履歴リスト */}
+        <div style={styles.lateListContainer}>
+          <h2 style={styles.lateListTitle}>遅刻履歴</h2>
+          {lateCounts.length === 0 ? (
+            <p style={styles.noLate}>まだ遅刻記録はありません</p>
+          ) : (
+            <ul style={styles.lateList}>
+              {lateCounts
+                .slice()
+                .sort((a, b) => new Date(b.date) - new Date(a.date))
+                .map((late) => (
+                  <li key={late.id} style={styles.lateItem}>
+                    {late.date}
+                    <button
+                      onClick={() => deleteLate(late.id)}
+                      style={styles.lateDeleteButton}
+                    >
+                      削除
+                    </button>
+                  </li>
+                ))}
+            </ul>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -115,6 +182,54 @@ const styles = {
     fontSize: "1.2rem",
     marginTop: "10px",
     textShadow: "0 0 5px #0f0, 0 0 10px #0f0, 0 0 20px #0ff",
+  },
+  lateCounter: {
+    textAlign: "center",
+    fontSize: "1.2rem",
+    marginTop: "15px",
+    color: "#ff4444",
+    textShadow: "0 0 5px #f00, 0 0 10px #f00",
+  },
+  lateListContainer: {
+    marginTop: "20px",
+    padding: "10px",
+    backgroundColor: "rgba(255, 0, 0, 0.1)",
+    borderRadius: "8px",
+    color: "#ffcccc",
+    textAlign: "center",
+  },
+  lateListTitle: {
+    marginBottom: "10px",
+    fontSize: "1.2rem",
+    color: "#ff4444",
+  },
+  lateList: {
+    listStyle: "none",
+    padding: 0,
+    margin: 0,
+    maxHeight: "150px",
+    overflowY: "auto",
+  },
+  lateItem: {
+    padding: "5px 0",
+    borderBottom: "1px solid rgba(255, 255, 255, 0.2)",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  noLate: {
+    fontStyle: "italic",
+    color: "#ff8888",
+  },
+  lateDeleteButton: {
+    padding: "3px 8px",
+    fontSize: "0.8rem",
+    border: "none",
+    borderRadius: "5px",
+    backgroundColor: "#ff0000",
+    color: "#fff",
+    cursor: "pointer",
+    animation: "glow 1.5s infinite",
   },
 };
 
